@@ -30,10 +30,18 @@ enum class LLMQType : uint8_t
     LLMQ_TEST_V17 = 102, // 3 members, 2 (66%) threshold, one per hour. Params might differ when -llmqtestparams is used
 };
 
+enum class LLMQLegacy {
+    SHARED,
+    LEGACY,
+    NOVEL
+};
+
 // Configures a LLMQ and its DKG
 // See https://github.com/dashpay/dips/blob/master/dip-0006.md for more details
 struct LLMQParams {
     LLMQType type;
+
+    LLMQLegacy legacy;
 
     // not consensus critical, only used in logging, RPC and UI
     std::string_view name;
@@ -95,7 +103,7 @@ struct LLMQParams {
 };
 
 
-static constexpr std::array<LLMQParams, 7> available_llmqs = {
+static constexpr std::array<LLMQParams, 10> available_llmqs = {
 
     /**
      * llmq_test
@@ -104,6 +112,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_TEST,
+        .legacy = LLMQLegacy::SHARED,
         .name = "llmq_test",
         .size = 3,
         .minSize = 2,
@@ -128,6 +137,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_TEST_V17,
+        .legacy = LLMQLegacy::SHARED,
         .name = "llmq_test_v17",
         .size = 3,
         .minSize = 2,
@@ -152,6 +162,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_DEVNET,
+        .legacy = LLMQLegacy::SHARED,
         .name = "llmq_devnet",
         .size = 10,
         .minSize = 7,
@@ -169,7 +180,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
         .recoveryMembers = 6,
     },
 
-/**
+    /**
      * llmq_50_60
      * This quorum is deployed on mainnet and requires
      * 40 - 50 participants
@@ -177,10 +188,29 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_50_60,
+        .legacy = LLMQLegacy::LEGACY,
         .name = "llmq_50_60",
         .size = 50,
         .minSize = 40,
         .threshold = 30,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 40,
+
+        .signingActiveQuorumCount = 24, // a full day worth of LLMQs
+        .keepOldConnections = 25,
+        .recoveryMembers = 25,
+    },
+    LLMQParams{
+        .type = LLMQType::LLMQ_50_60,
+        .legacy = LLMQLegacy::NOVEL,
+        .name = "llmq_50_60",
+        .size = 60,
+        .minSize = 45,
+        .threshold = 40,
 
         .dkgInterval = 24, // one DKG per hour
         .dkgPhaseBlocks = 2,
@@ -201,10 +231,30 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_400_60,
+        .legacy = LLMQLegacy::LEGACY,
         .name = "llmq_400_60",
         .size = 400,
         .minSize = 300,
         .threshold = 240,
+
+        .dkgInterval = 24 * 12, // one DKG every 12 hours
+        .dkgPhaseBlocks = 4,
+        .dkgMiningWindowStart = 20, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 28,
+        .dkgBadVotesThreshold = 300,
+
+        .signingActiveQuorumCount = 4, // two days worth of LLMQs
+
+        .keepOldConnections = 5,
+        .recoveryMembers = 100,
+    },
+    LLMQParams{
+        .type = LLMQType::LLMQ_400_60,
+        .legacy = LLMQLegacy::NOVEL,
+        .name = "llmq_400_60",
+        .size = 400,
+        .minSize = 300,
+        .threshold = 268, // 2/3rds
 
         .dkgInterval = 24 * 12, // one DKG every 12 hours
         .dkgPhaseBlocks = 4,
@@ -227,6 +277,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_400_85,
+        .legacy = LLMQLegacy::SHARED,
         .name = "llmq_400_85",
         .size = 400,
         .minSize = 350,
@@ -253,6 +304,7 @@ static constexpr std::array<LLMQParams, 7> available_llmqs = {
      */
     LLMQParams{
         .type = LLMQType::LLMQ_100_67,
+        .legacy = LLMQLegacy::SHARED,
         .name = "llmq_100_67",
         .size = 100,
         .minSize = 80,

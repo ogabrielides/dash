@@ -622,7 +622,7 @@ bool CSigningManager::PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, b
     retBan = false;
 
     auto llmqType = recoveredSig.llmqType;
-    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+    if (!Params().GetConsensus().legacy_llmqs.count(llmqType)) {
         retBan = true;
         return false;
     }

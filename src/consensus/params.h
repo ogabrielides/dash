@@ -112,7 +112,8 @@ struct Params {
     int nHighSubsidyBlocks{0};
     int nHighSubsidyFactor{1};
 
-    std::map<LLMQType, LLMQParams> llmqs;
+    std::map<LLMQType, LLMQParams> legacy_llmqs;
+    std::map<LLMQType, LLMQParams> novel_llmqs;
     LLMQType llmqTypeChainLocks;
     LLMQType llmqTypeInstantSend{LLMQType::LLMQ_NONE};
     LLMQType llmqTypePlatform{LLMQType::LLMQ_NONE};

@@ -110,15 +110,32 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
 
 void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
 {
-    assert(consensus.llmqs.count(llmqType) == 0);
+    bool found{false};
     for (const auto& llmq_param : Consensus::available_llmqs) {
         if (llmq_param.type == llmqType) {
-            consensus.llmqs[llmqType] = llmq_param;
-            return;
+            switch (llmq_param.legacy) {
+                case Consensus::LLMQLegacy::SHARED:
+                    assert(consensus.legacy_llmqs.count(llmqType) == 0);
+                    assert(consensus.novel_llmqs.count(llmqType) == 0);
+                    consensus.legacy_llmqs[llmqType] = llmq_param;
+                    consensus.novel_llmqs[llmqType] = llmq_param;
+                    break;
+                case Consensus::LLMQLegacy::NOVEL:
+                    assert(consensus.novel_llmqs.count(llmqType) == 0);
+                    consensus.novel_llmqs[llmqType] = llmq_param;
+                    break;
+                case Consensus::LLMQLegacy::LEGACY:
+                    assert(consensus.legacy_llmqs.count(llmqType) == 0);
+                    consensus.legacy_llmqs[llmqType] = llmq_param;
+                    break;
+            }
+            found = true;
         }
     }
-    error("CChainParams::%s: unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType));
-    assert(false);
+    if (!found) {
+        error("CChainParams::%s: unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType));
+        assert(false);
+    }
 }
 
 /**
@@ -755,7 +772,8 @@ public:
      */
     void UpdateLLMQDevnetParameters(int size, int threshold)
     {
-        auto& params = consensus.llmqs.at(Consensus::LLMQType::LLMQ_DEVNET);
+        auto& params = consensus.legacy_llmqs.at(Consensus::LLMQType::LLMQ_DEVNET);
+        assert(params.legacy == Consensus::LLMQLegacy::SHARED);
         params.size = size;
         params.minSize = threshold;
         params.threshold = threshold;
@@ -983,7 +1001,8 @@ public:
      */
     void UpdateLLMQTestParameters(int size, int threshold)
     {
-        auto& params = consensus.llmqs.at(Consensus::LLMQType::LLMQ_TEST);
+        auto& params = consensus.legacy_llmqs.at(Consensus::LLMQType::LLMQ_TEST);
+        assert(params.legacy == Consensus::LLMQLegacy::SHARED);
         params.size = size;
         params.minSize = threshold;
         params.threshold = threshold;
@@ -1143,9 +1162,9 @@ void CDevNetParams::UpdateDevnetLLMQChainLocksFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqchainlocks")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(consensus.llmqs.at(consensus.llmqTypeChainLocks).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqchainlocks", std::string(consensus.legacy_llmqs.at(consensus.llmqTypeChainLocks).name));
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
-    for (const auto& p : consensus.llmqs) {
+    for (const auto& p : consensus.legacy_llmqs) {
         if (p.second.name == strLLMQType) {
             llmqType = p.first;
         }
@@ -1161,9 +1180,9 @@ void CDevNetParams::UpdateDevnetLLMQInstantSendFromArgs(const ArgsManager& args)
 {
     if (!args.IsArgSet("-llmqinstantsend")) return;
 
-    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(consensus.llmqs.at(consensus.llmqTypeInstantSend).name));
+    std::string strLLMQType = gArgs.GetArg("-llmqinstantsend", std::string(consensus.legacy_llmqs.at(consensus.llmqTypeInstantSend).name));
     Consensus::LLMQType llmqType = Consensus::LLMQType::LLMQ_NONE;
-    for (const auto& p : consensus.llmqs) {
+    for (const auto& p : consensus.legacy_llmqs) {
         if (p.second.name == strLLMQType) {
             llmqType = p.first;
         }

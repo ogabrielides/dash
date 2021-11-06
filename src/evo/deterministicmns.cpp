@@ -1014,7 +1014,7 @@ CDeterministicMNList CDeterministicMNManager::GetListForBlock(const CBlockIndex*
             mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
         } else {
             // keep snapshots for yet alive quorums
-            for (auto& p_llmq : Params().GetConsensus().llmqs) {
+            for (auto& p_llmq : Params().GetConsensus().legacy_llmqs) {
                 if ((snapshot.GetHeight() % p_llmq.second.dkgInterval == 0) && (snapshot.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= tipIndex->nHeight)) {
                     mnListsCache.emplace(snapshot.GetBlockHash(), snapshot);
                     break;
@@ -1085,7 +1085,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
             continue;
         }
         bool fQuorumCache{false};
-        for (auto& p_llmq : Params().GetConsensus().llmqs) {
+        for (auto& p_llmq : Params().GetConsensus().legacy_llmqs) {
             if ((p.second.GetHeight() % p_llmq.second.dkgInterval == 0) && (p.second.GetHeight() + p_llmq.second.dkgInterval * (p_llmq.second.keepOldConnections + 1) >= nHeight)) {
                 fQuorumCache = true;
                 break;
@@ -1099,7 +1099,7 @@ void CDeterministicMNManager::CleanupCache(int nHeight)
         if (tipIndex && tipIndex->pprev && (p.first == tipIndex->pprev->GetBlockHash())) {
             toDeleteLists.emplace_back(p.first);
         } else {
-            for (auto& p_llmq : Params().GetConsensus().llmqs) {
+            for (auto& p_llmq : Params().GetConsensus().legacy_llmqs) {
                 if (p.second.GetHeight() % p_llmq.second.dkgInterval == 0) {
                     toDeleteLists.emplace_back(p.first);
                     break;

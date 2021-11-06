@@ -392,7 +392,7 @@ bool CQuorumManager::RequestQuorumData(CNode* pFrom, Consensus::LLMQType llmqTyp
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- pFrom is neither a verified masternode nor a qwatch connection\n", __func__);
         return false;
     }
-    if (Params().GetConsensus().llmqs.count(llmqType) == 0) {
+    if (Params().GetConsensus().legacy_llmqs.count(llmqType) == 0) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Invalid llmqType: %d\n", __func__, static_cast<uint8_t>(llmqType));
         return false;
     }
@@ -580,7 +580,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
             }
         }
 
-        if (Params().GetConsensus().llmqs.count(request.GetLLMQType()) == 0) {
+        if (Params().GetConsensus().legacy_llmqs.count(request.GetLLMQType()) == 0) {
             sendQDATA(CQuorumDataRequest::Errors::QUORUM_TYPE_INVALID);
             return;
         }

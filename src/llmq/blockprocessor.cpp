@@ -57,7 +57,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             return;
         }
 
-        if (!Params().GetConsensus().llmqs.count(qc.llmqType)) {
+        if (!Params().GetConsensus().legacy_llmqs.count(qc.llmqType)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- invalid commitment type %d from peer=%d\n", __func__,
                      static_cast<uint8_t>(qc.llmqType), pfrom->GetId());
             LOCK(cs_main);

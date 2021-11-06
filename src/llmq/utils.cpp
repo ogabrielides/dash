@@ -374,7 +374,7 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
         if (!fLLMQTypePresent || !fModePresent || fTooManyEntries) {
             throw std::invalid_argument(strprintf("Invalid format in -llmq-qvvec-sync: %s", strEntry));
         }
-        for (const auto& p : Params().GetConsensus().llmqs) {
+        for (const auto& p : Params().GetConsensus().legacy_llmqs) {
             if (p.second.name == strLLMQType) {
                 llmqType = p.first;
                 break;
