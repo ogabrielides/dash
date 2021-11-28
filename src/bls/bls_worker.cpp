@@ -75,48 +75,55 @@ void CBLSWorker::Stop()
 
 bool CBLSWorker::GenerateContributions(int quorumThreshold, const BLSIdVector& ids, BLSVerificationVectorPtr& vvecRet, BLSSecretKeyVector& skSharesRet)
 {
-    auto svec = std::make_shared<BLSSecretKeyVector>((size_t)quorumThreshold);
+//    const size_t batchSize = 8;
+    auto svec = BLSSecretKeyVector((size_t)quorumThreshold);
     vvecRet = std::make_shared<BLSVerificationVector>((size_t)quorumThreshold);
     skSharesRet.resize(ids.size());
 
     for (int i = 0; i < quorumThreshold; i++) {
-        (*svec)[i].MakeNewKey();
+        svec[i].MakeNewKey();
     }
-    std::list<std::future<bool> > futures;
-    size_t batchSize = 8;
+//    std::vector<std::future<bool>> futures;
+//    const auto max_futures_size = (quorumThreshold / batchSize + ids.size() / batchSize) + 2;
+//    futures.reserve(max_futures_size);
 
-    for (size_t i = 0; i < quorumThreshold; i += batchSize) {
-        size_t start = i;
-        size_t count = std::min(batchSize, quorumThreshold - start);
-        auto f = [&, start, count](int threadId) {
-            for (size_t j = start; j < start + count; j++) {
-                (*vvecRet)[j] = (*svec)[j].GetPublicKey();
-            }
-            return true;
-        };
-        futures.emplace_back(workerPool.push(f));
-    }
-
-    for (size_t i = 0; i < ids.size(); i += batchSize) {
-        size_t start = i;
-        size_t count = std::min(batchSize, ids.size() - start);
-        auto f = [&, start, count](int threadId) {
-            for (size_t j = start; j < start + count; j++) {
-                if (!skSharesRet[j].SecretKeyShare(*svec, ids[j])) {
-                    return false;
-                }
-            }
-            return true;
-        };
-        futures.emplace_back(workerPool.push(f));
-    }
-    bool success = true;
-    for (auto& f : futures) {
-        if (!f.get()) {
-            success = false;
+    for (size_t i = 0; i < ids.size(); i ++) {
+        if (!skSharesRet[i].SecretKeyShare(svec, ids[i])) {
+            return false;
         }
+
+//        size_t start = i;
+//        size_t count = std::min(batchSize, ids.size() - start);
+////        auto f = [&, start, count](int threadId) {
+//            for (size_t j = start; j < start + count; j++) {
+//                if (!skSharesRet[j].SecretKeyShare(svec, ids[j])) {
+//                    return false;
+//                }
+//            }
+//            return true;
+//        };
+//        futures.emplace_back(workerPool.push(f));
     }
-    return success;
+
+    for (size_t i = 0; i < quorumThreshold; i++) {
+        (*vvecRet)[i] = svec[i].GetPublicKey();
+
+//        size_t start = i;
+//        size_t count = std::min(batchSize, quorumThreshold - start);
+////        auto f = [&, start, count](int threadId) {
+//            for (size_t j = start; j < start + count; j++) {
+//                (*vvecRet)[j] = svec[j].GetPublicKey();
+//            }
+////            return true;
+////        };
+////        futures.emplace_back(workerPool.push(f));
+    }
+
+//    ASSERT_IF_DEBUG(futures.size() <= max_futures_size);
+//    return std::all_of(futures.begin(), futures.end(), [](auto& f){
+//        return f.get();
+//    });
+    return true;
 }
 
 // aggregates a single vector of BLS objects in parallel
