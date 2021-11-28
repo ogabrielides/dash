@@ -286,12 +286,12 @@ static std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterminis
     if (payee) {
         CTxDestination dest;
         if (!ExtractDestination(payee->pdmnState->scriptPayout, dest)) {
-            assert(false);
+            assert(!"ExtractDestination scriptPayout failed");
         }
         strPayments = EncodeDestination(dest);
         if (payee->nOperatorReward != 0 && payee->pdmnState->scriptOperatorPayout != CScript()) {
             if (!ExtractDestination(payee->pdmnState->scriptOperatorPayout, dest)) {
-                assert(false);
+                assert(!"ExtractDestination scriptOperatorPayout failed");
             }
             strPayments += ", " + EncodeDestination(dest);
         }

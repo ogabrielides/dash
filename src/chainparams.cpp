@@ -105,7 +105,7 @@ static CBlock FindDevNetGenesisBlock(const CBlock &prevBlock, const CAmount& rew
     // This is very unlikely to happen as we start the devnet with a very low difficulty. In many cases even the first
     // iteration of the above loop will give a result already
     error("FindDevNetGenesisBlock: could not find devnet genesis block for %s", devNetName);
-    assert(false);
+    assert(!"FindDevNetGenesisBlock: could not find devnet genesis block");
 }
 
 void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
@@ -134,7 +134,7 @@ void CChainParams::AddLLMQ(Consensus::LLMQType llmqType)
     }
     if (!found) {
         error("CChainParams::%s: unknown LLMQ type %d", __func__, static_cast<uint8_t>(llmqType));
-        assert(false);
+        assert(!"CChainParams::%s: unknown LLMQ type");
     }
 }
 

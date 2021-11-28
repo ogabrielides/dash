@@ -1639,7 +1639,7 @@ void CConnman::SocketEvents(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_s
             SocketEventsSelect(recv_set, send_set, error_set, fOnlyPoll);
             break;
         default:
-            assert(false);
+            assert(!"SocketEvents default case");
     }
 }
 

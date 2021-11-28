@@ -334,7 +334,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
         if (!found) {
             CTxDestination dest;
             if (!ExtractDestination(txout.scriptPubKey, dest))
-                assert(false);
+                assert(!"ExtractDestination failed");
             LogPrintf("CMasternodePayments::%s -- ERROR failed to find expected payee %s in block at height %s\n", __func__, EncodeDestination(dest), nBlockHeight);
             return false;
         }

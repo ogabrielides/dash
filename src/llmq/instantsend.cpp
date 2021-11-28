@@ -466,7 +466,7 @@ void CInstantSendManager::Start()
 {
     // can't start new thread if we have one running already
     if (workThread.joinable()) {
-        assert(false);
+        assert(!"InstantSend workThread already exists");
     }
 
     workThread = std::thread(&TraceThread<std::function<void()> >, "isman", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
@@ -480,7 +480,7 @@ void CInstantSendManager::Stop()
 
     // make sure to call InterruptWorkerThread() first
     if (!workInterrupt) {
-        assert(false);
+        assert(!"InterruptWorkerThread not called first");
     }
 
     if (workThread.joinable()) {
@@ -1455,7 +1455,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         if (!InvalidateBlock(state, Params(), pindex2)) {
             LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
-            assert(false);
+            assert(!"InvalidateBlock failed");
         }
         activateBestChain = true;
     }
@@ -1465,7 +1465,7 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         if (!ActivateBestChain(state, Params())) {
             LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
-            assert(false);
+            assert(!"ActivateBestChain failed");
         }
     }
 }

@@ -3356,7 +3356,7 @@ void CChainState::EnforceBlock(CValidationState& state, const CChainParams& chai
             if (!MarkConflictingBlock(state, chainparams, jt->second)) {
                 LogPrintf("CChainState::%s -- MarkConflictingBlock failed: %s\n", __func__, FormatStateMessage(state));
                 // This should not have happened and we are in a state were it's not safe to continue anymore
-                assert(false);
+                assert(!"MarkConflictingBlock failed");
             }
             LogPrintf("CChainState::%s -- marked block %s as conflicting\n",
                       __func__, jt->second->GetBlockHash().ToString());

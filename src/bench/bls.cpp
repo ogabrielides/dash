@@ -107,10 +107,10 @@ static void BLS_Verify_Normal(benchmark::Bench& bench)
         bool valid = sigs[i].VerifyInsecure(pubKeys[i], msgHashes[i]);
         if (valid && invalid[i]) {
             std::cout << "expected invalid but it is valid" << std::endl;
-            assert(false);
+            assert(!"expected invalid but it is valid");
         } else if (!valid && !invalid[i]) {
             std::cout << "expected valid but it is invalid" << std::endl;
-            assert(false);
+            assert(!"expected valid but it is invalid");
         }
         i = (i + 1) % pubKeys.size();
     });
@@ -290,10 +290,10 @@ static void BLS_Verify_Batched(benchmark::Bench& bench)
         for (size_t k = 0; k < batchSize; k++) {
             if (valid[k] && invalid[(startI + k) % pubKeys.size()]) {
                 std::cout << "expected invalid but it is valid" << std::endl;
-                assert(false);
+                assert(!"expected invalid but it is valid");
             } else if (!valid[k] && !invalid[(startI + k) % pubKeys.size()]) {
                 std::cout << "expected valid but it is invalid" << std::endl;
-                assert(false);
+                assert(!"expected valid but it is invalid");
             }
         }
     });
@@ -337,10 +337,10 @@ static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
 
         if (valid && invalid[j]) {
             std::cout << "expected invalid but it is valid" << std::endl;
-            assert(false);
+            assert(!"expected invalid but it is valid");
         } else if (!valid && !invalid[j]) {
             std::cout << "expected valid but it is invalid" << std::endl;
-            assert(false);
+            assert(!"expected valid but it is invalid");
         }
     });
 

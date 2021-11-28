@@ -648,7 +648,7 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     if (it->GetTx().nType == TRANSACTION_PROVIDER_REGISTER) {
         CProRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+            assert(!"GetTxPayload failed for protx_register");
         }
         if (!proTx.collateralOutpoint.IsNull()) {
             eraseProTxRef(it->GetTx().GetHash(), proTx.collateralOutpoint.hash);
@@ -661,21 +661,21 @@ void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+            assert(!"GetTxPayload failed for protx_update_service");
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxAddresses.erase(proTx.addr);
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+            assert(!"GetTxPayload failed for protx_update_registrar");
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
         mapProTxBlsPubKeyHashes.erase(proTx.pubKeyOperator.GetHash());
     } else if (it->GetTx().nType == TRANSACTION_PROVIDER_UPDATE_REVOKE) {
         CProUpRevTx proTx;
         if (!GetTxPayload(it->GetTx(), proTx)) {
-            assert(false);
+            assert(!"GetTxPayload failed for protx_update_revoke");
         }
         eraseProTxRef(proTx.proTxHash, it->GetTx().GetHash());
     }

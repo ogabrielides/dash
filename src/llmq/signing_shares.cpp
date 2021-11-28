@@ -193,7 +193,7 @@ void CSigSharesManager::StartWorkerThread()
 {
     // can't start new thread if we have one running already
     if (workThread.joinable()) {
-        assert(false);
+        assert(!"can't start new thread if we have one running already");
     }
 
     workThread = std::thread(&TraceThread<std::function<void()> >,
@@ -205,7 +205,7 @@ void CSigSharesManager::StopWorkerThread()
 {
     // make sure to call InterruptWorkerThread() first
     if (!workInterrupt) {
-        assert(false);
+        assert(!"did not call InterruptWorkerThread() first");
     }
 
     if (workThread.joinable()) {
@@ -662,7 +662,7 @@ bool CSigSharesManager::ProcessPendingSigShares(const CConnman& connman)
                 // this should really not happen (we already ensured we have the quorum vvec,
                 // so we should also be able to create all pubkey shares)
                 LogPrintf("CSigSharesManager::%s -- pubKeyShare is invalid, which should not be possible here\n", __func__);
-                assert(false);
+                assert(!"pubKeyShare is invalid, which should not be possible here");
             }
 
             batchVerifier.PushMessage(nodeId, sigShare.GetKey(), sigShare.GetSignHash(), sigShare.sigShare.Get(), pubKeyShare);
