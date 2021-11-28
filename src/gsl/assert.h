@@ -58,6 +58,8 @@
 // 2. GSL_THROW_ON_CONTRACT_VIOLATION: a gsl::fail_fast exception will be thrown
 // 3. GSL_UNENFORCED_ON_CONTRACT_VIOLATION: nothing happens
 //
+//#define GSL_THROW_ON_CONTRACT_VIOLATION
+
 #if !(defined(GSL_THROW_ON_CONTRACT_VIOLATION) || defined(GSL_TERMINATE_ON_CONTRACT_VIOLATION) ||  \
       defined(GSL_UNENFORCED_ON_CONTRACT_VIOLATION))
 #define GSL_TERMINATE_ON_CONTRACT_VIOLATION
@@ -124,7 +126,7 @@ namespace gsl
 #if defined(GSL_MSVC_USE_STL_NOEXCEPTION_WORKAROUND)
             (*gsl::details::get_terminate_handler())();
 #else
-            std::terminate();
+            assert(!"failure in gsl checks");
 #endif
         }
 
