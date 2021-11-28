@@ -405,7 +405,7 @@ private:
     bool ProcessMessageBatchedSigShares(const CNode* pfrom, const CBatchedSigShares& batchedSigShares);
     void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare);
 
-    static bool VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv);
+    static bool VerifySigSharesInv(const Consensus::LLMQParams& llmqParams, const CSigSharesInv& inv);
     static bool PreVerifyBatchedSigShares(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,

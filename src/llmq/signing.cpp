@@ -634,7 +634,8 @@ bool CSigningManager::PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, b
                   recoveredSig.quorumHash.ToString());
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+    assert(quorum);
+    if (!CLLMQUtils::IsQuorumActive(quorum->params, quorum->qc->quorumHash)) {
         return false;
     }
 
@@ -692,7 +693,8 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
                     it = v.erase(it);
                     continue;
                 }
-                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
+                assert(quorum);
+                if (!CLLMQUtils::IsQuorumActive(quorum->params, quorum->qc->quorumHash)) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig->quorumHash.ToString(), nodeId);
                     it = v.erase(it);
@@ -1002,8 +1004,6 @@ bool CSigningManager::GetVoteForId(Consensus::LLMQType llmqType, const uint256& 
 
 CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType, const uint256& selectionHash, int signHeight, int signOffset)
 {
-    size_t poolSize = GetLLMQParams(llmqType).signingActiveQuorumCount;
-
     CBlockIndex* pindexStart;
     {
         LOCK(cs_main);
@@ -1016,6 +1016,9 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         }
         pindexStart = ::ChainActive()[startBlockHeight];
     }
+
+    assert(pindexStart);
+    size_t poolSize = GetLLMQParams(pindexStart, llmqType).signingActiveQuorumCount;
 
     auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
     if (quorums.empty()) {

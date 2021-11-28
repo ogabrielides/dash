@@ -14,6 +14,8 @@
 #include <dbwrapper.h>
 #include <versionbits.h>
 
+#include <gsl/pointers.h>
+
 class CBlockIndex;
 class CDeterministicMN;
 using CDeterministicMNCPtr = std::shared_ptr<const CDeterministicMN>;
@@ -62,6 +64,7 @@ public:
     static void AddQuorumProbeConnections(const Consensus::LLMQParams& llmqParams, const CBlockIndex* pQuorumBaseBlockIndex, const uint256& myProTxHash);
 
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
+    static bool IsQuorumActive(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash);
     static bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     static std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
     static std::vector<std::reference_wrapper<const Consensus::LLMQParams>> GetEnabledQuorumParams(const CBlockIndex* pindex);
@@ -116,8 +119,9 @@ public:
     static void InitQuorumsCache(CacheType& cache);
 };
 
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType);
-
+const Consensus::LLMQParams& GetLLMQParams(gsl::not_null<const CBlockIndex*> pindex, Consensus::LLMQType llmqType);
+const Consensus::LLMQParams& GetLegacyLLMQParams(Consensus::LLMQType llmqType);
+const Consensus::LLMQParams& GetNovelLLMQParams(Consensus::LLMQType llmqType);
 } // namespace llmq
 
 #endif // BITCOIN_LLMQ_UTILS_H

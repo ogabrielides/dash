@@ -287,10 +287,15 @@ void CLLMQUtils::AddQuorumProbeConnections(const Consensus::LLMQParams& llmqPara
 
 bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
+    return IsQuorumActive(GetLLMQParams(LookupBlockIndex(quorumHash), llmqType), quorumHash);
+}
+
+bool CLLMQUtils::IsQuorumActive(const Consensus::LLMQParams& llmqParams, const uint256& quorumHash)
+{
     // sig shares and recovered sigs are only accepted from recent/active quorums
     // we allow one more active quorum as specified in consensus, as otherwise there is a small window where things could
     // fail while we are on the brink of a new quorum
-    auto quorums = quorumManager->ScanQuorums(llmqType, GetLLMQParams(llmqType).signingActiveQuorumCount + 1);
+    auto quorums = quorumManager->ScanQuorums(llmqParams.type, llmqParams.signingActiveQuorumCount + 1);
     for (const auto& q : quorums) {
         if (q->qc->quorumHash == quorumHash) {
             return true;
@@ -328,8 +333,11 @@ bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockI
 std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockIndex* pindex)
 {
     std::vector<Consensus::LLMQType> ret;
-    ret.reserve(Params().GetConsensus().llmqs.size());
-    for (const auto& [type, _] : Params().GetConsensus().llmqs) {
+    bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+    const auto& llmqs = !fork_active ? Params().GetConsensus().legacy_llmqs : Params().GetConsensus().novel_llmqs;
+
+    ret.reserve(llmqs.size());
+    for (const auto& [type, _] : llmqs) {
         if (IsQuorumTypeEnabled(type, pindex)) {
             ret.push_back(type);
         }
@@ -340,8 +348,10 @@ std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockI
 std::vector<std::reference_wrapper<const Consensus::LLMQParams>> CLLMQUtils::GetEnabledQuorumParams(const CBlockIndex* pindex)
 {
     std::vector<std::reference_wrapper<const Consensus::LLMQParams>> ret;
-    ret.reserve(Params().GetConsensus().llmqs.size());
-    for (const auto& [type, params] : Params().GetConsensus().llmqs) {
+    bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+    const auto& llmqs = !fork_active ? Params().GetConsensus().legacy_llmqs : Params().GetConsensus().novel_llmqs;
+    ret.reserve(llmqs.size());
+    for (const auto& [type, params] : llmqs) {
         if (IsQuorumTypeEnabled(type, pindex)) {
             ret.emplace_back(params);
         }
@@ -412,7 +422,7 @@ std::map<Consensus::LLMQType, QvvecSyncMode> CLLMQUtils::GetEnabledQuorumVvecSyn
 template <typename CacheType>
 void CLLMQUtils::InitQuorumsCache(CacheType& cache)
 {
-    for (auto& llmq : Params().GetConsensus().llmqs) {
+    for (auto& llmq : Params().GetConsensus().legacy_llmqs) {
         cache.emplace(std::piecewise_construct, std::forward_as_tuple(llmq.first),
                       std::forward_as_tuple(llmq.second.signingActiveQuorumCount + 1));
     }
@@ -421,9 +431,19 @@ template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unorder
 template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>>& cache);
 template void CLLMQUtils::InitQuorumsCache<std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>>(std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>, std::less<Consensus::LLMQType>, std::allocator<std::pair<Consensus::LLMQType const, unordered_lru_cache<uint256, std::shared_ptr<llmq::CQuorum>, StaticSaltedHasher, 0ul, 0ul>>>>&);
 
-const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
+const Consensus::LLMQParams& GetLLMQParams(gsl::not_null<const CBlockIndex*> pindex, Consensus::LLMQType llmqType)
 {
-    return Params().GetConsensus().llmqs.at(llmqType);
+    assert(pindex);
+    bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+    return !fork_active ? GetLegacyLLMQParams(llmqType) : Params().GetConsensus().novel_llmqs.at(llmqType);
+}
+const Consensus::LLMQParams& GetLegacyLLMQParams(Consensus::LLMQType llmqType)
+{
+    return Params().GetConsensus().legacy_llmqs.at(llmqType);
+}
+const Consensus::LLMQParams& GetNovelLLMQParams(Consensus::LLMQType llmqType)
+{
+    return Params().GetConsensus().novel_llmqs.at(llmqType);
 }
 
 } // namespace llmq

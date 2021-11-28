@@ -213,7 +213,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 continue;
             }
             auto qcHash = ::SerializeHash(qc.commitment);
-            const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
+            const auto& llmq_params = llmq::GetLLMQParams(pindexPrev, qc.commitment.llmqType);
             auto& v = qcHashes[llmq_params.type];
             if (v.size() == llmq_params.signingActiveQuorumCount) {
                 // we pop the last entry, which is actually the oldest quorum as GetMinedAndActiveCommitmentsUntilBlock

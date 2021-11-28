@@ -203,7 +203,7 @@ void CQuorumManager::TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex)
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- Process block %s\n", __func__, pIndex->GetBlockHash().ToString());
 
-    for (auto& llmq : Params().GetConsensus().llmqs) {
+    for (auto& llmq : Params().GetConsensus().legacy_llmqs) {
         // Process signingActiveQuorumCount + 1 quorums for all available llmqTypes
         const auto vecQuorums = ScanQuorums(llmq.first, pIndex, llmq.second.signingActiveQuorumCount + 1);
 
@@ -256,7 +256,10 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         return;
     }
 
-    for (auto& p : Params().GetConsensus().llmqs) {
+    assert(pindexNew);
+    bool fork_active = VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+
+    for (auto& p : !fork_active ? Params().GetConsensus().legacy_llmqs : Params().GetConsensus().novel_llmqs) {
         EnsureQuorumConnections(p.second, pindexNew);
     }
 
@@ -311,7 +314,7 @@ CQuorumPtr CQuorumManager::BuildQuorumFromCommitment(const Consensus::LLMQType l
     }
     assert(qc->quorumHash == pQuorumBaseBlockIndex->GetBlockHash());
 
-    const auto& llmqParams = llmq::GetLLMQParams(llmqType);
+    const auto& llmqParams = llmq::GetLLMQParams(pQuorumBaseBlockIndex, llmqType);
     auto quorum = std::make_shared<CQuorum>(llmqParams, blsWorker);
     auto members = CLLMQUtils::GetAllQuorumMembers(llmqParams, pQuorumBaseBlockIndex);
 

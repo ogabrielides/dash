@@ -728,7 +728,7 @@ void CInstantSendManager::TrySignInstantSendLock(const CTransaction& tx)
     // compute cycle hash
     {
         LOCK(cs_main);
-        const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+        const auto dkgInterval = GetLegacyLLMQParams(llmqType).dkgInterval;
         const auto quorumHeight = ::ChainActive().Height() - (::ChainActive().Height() % dkgInterval);
         islock.cycleHash = ::ChainActive()[quorumHeight]->GetBlockHash();
     }
@@ -822,7 +822,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(const CNode* pfrom, cons
         }
 
         const auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
-        const auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+        const auto dkgInterval = GetLegacyLLMQParams(llmqType).dkgInterval;
         if (blockIndex->nHeight % dkgInterval != 0) {
             WITH_LOCK(cs_main, Misbehaving(pfrom->GetId(), 100));
             return;
@@ -893,7 +893,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
     }
 
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
-    auto dkgInterval = GetLLMQParams(llmqType).dkgInterval;
+    auto dkgInterval = GetLegacyLLMQParams(llmqType).dkgInterval;
 
     // First check against the current active set and don't ban
     auto badISLocks = ProcessPendingInstantSendLocks(0, pend, false);
@@ -956,7 +956,7 @@ std::unordered_set<uint256, StaticSaltedHasher> CInstantSendManager::ProcessPend
                 continue;
             }
 
-            const auto dkgInterval = GetLLMQParams(Params().GetConsensus().llmqTypeInstantSend).dkgInterval;
+            const auto dkgInterval = GetLegacyLLMQParams(Params().GetConsensus().llmqTypeInstantSend).dkgInterval;
             if (blockIndex->nHeight + dkgInterval < ::ChainActive().Height()) {
                 nSignHeight = blockIndex->nHeight + dkgInterval - 1;
             }

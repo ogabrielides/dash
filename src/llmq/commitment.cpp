@@ -37,7 +37,7 @@ bool CFinalCommitment::Verify(const CBlockIndex* pQuorumBaseBlockIndex, bool che
         LogPrintfFinalCommitment("invalid llmqType=%d\n", static_cast<uint8_t>(llmqType));
         return false;
     }
-    const auto& llmq_params = GetLLMQParams(llmqType);
+    const auto& llmq_params = GetLLMQParams(pQuorumBaseBlockIndex, llmqType);
 
     if (!VerifySizes(llmq_params)) {
         return false;
@@ -113,7 +113,7 @@ bool CFinalCommitment::VerifyNull() const
         return false;
     }
 
-    if (!IsNull() || !VerifySizes(GetLLMQParams(llmqType))) {
+    if (!IsNull() || (!VerifySizes(GetLegacyLLMQParams(llmqType)) && !VerifySizes(GetNovelLLMQParams(llmqType)))) {
         return false;
     }
 

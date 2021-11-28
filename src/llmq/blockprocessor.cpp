@@ -84,7 +84,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 // same, can't punish
                 return;
             }
-            int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % GetLLMQParams(type).dkgInterval);
+            int quorumHeight = pQuorumBaseBlockIndex->nHeight - (pQuorumBaseBlockIndex->nHeight % GetLLMQParams(pQuorumBaseBlockIndex, type).dkgInterval);
             if (quorumHeight != pQuorumBaseBlockIndex->nHeight) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                           qc.quorumHash.ToString(), pfrom->GetId());
@@ -189,7 +189,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 {
     AssertLockHeld(cs_main);
 
-    const auto& llmq_params = GetLLMQParams(qc.llmqType);
+    const auto& llmq_params = GetLLMQParams(WITH_LOCK(cs_main, return LookupBlockIndex(blockHash)), qc.llmqType);
 
     uint256 quorumHash = GetQuorumBlockHash(llmq_params, nHeight);
 
@@ -483,7 +483,10 @@ std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> CQuorumBlockProce
 {
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> ret;
 
-    for (const auto& p : Params().GetConsensus().llmqs) {
+    assert(pindex);
+    bool fork_active = VersionBitsState(pindex, Params().GetConsensus(), Consensus::DEPLOYMENT_GOV_FEE, versionbitscache) == ThresholdState::ACTIVE;
+
+    for (const auto& p : !fork_active ? Params().GetConsensus().legacy_llmqs : Params().GetConsensus().novel_llmqs) {
         auto& v = ret[p.second.type];
         v.reserve(p.second.signingActiveQuorumCount);
         auto commitments = GetMinedCommitmentsUntilBlock(p.second.type, pindex, p.second.signingActiveQuorumCount);

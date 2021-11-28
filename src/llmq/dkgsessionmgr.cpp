@@ -28,7 +28,7 @@ CDKGSessionManager::CDKGSessionManager(CBLSWorker& _blsWorker, bool unitTests, b
     db = std::make_unique<CDBWrapper>(unitTests ? "" : (GetDataDir() / "llmq/dkgdb"), 1 << 20, unitTests, fWipe);
     MigrateDKG();
 
-    for (const auto& qt : Params().GetConsensus().llmqs) {
+    for (const auto& qt : Params().GetConsensus().legacy_llmqs) {
         dkgSessionHandlers.emplace(std::piecewise_construct,
                 std::forward_as_tuple(qt.first),
                 std::forward_as_tuple(qt.second, blsWorker, *this));
@@ -310,7 +310,8 @@ void CDKGSessionManager::WriteEncryptedContributions(Consensus::LLMQType llmqTyp
 bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, std::vector<uint16_t>& memberIndexesRet, std::vector<BLSVerificationVectorPtr>& vvecsRet, BLSSecretKeyVector& skContributionsRet) const
 {
     LOCK(contributionsCacheCs);
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    assert(pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(pQuorumBaseBlockIndex, llmqType), pQuorumBaseBlockIndex);
 
     memberIndexesRet.clear();
     vvecsRet.clear();
@@ -344,7 +345,7 @@ bool CDKGSessionManager::GetVerifiedContributions(Consensus::LLMQType llmqType, 
 
 bool CDKGSessionManager::GetEncryptedContributions(Consensus::LLMQType llmqType, const CBlockIndex* pQuorumBaseBlockIndex, const std::vector<bool>& validMembers, const uint256& nProTxHash, std::vector<CBLSIESEncryptedObject<CBLSSecretKey>>& vecRet) const
 {
-    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pQuorumBaseBlockIndex);
+    auto members = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(pQuorumBaseBlockIndex, llmqType), pQuorumBaseBlockIndex);
 
     vecRet.clear();
     vecRet.reserve(members.size());

@@ -27,7 +27,7 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
     if (detailLevel == 2) {
         const CBlockIndex* pindex = WITH_LOCK(cs_main, return LookupBlockIndex(quorumHash));
         if (pindex != nullptr) {
-            dmnMembers = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(llmqType), pindex);
+            dmnMembers = CLLMQUtils::GetAllQuorumMembers(GetLLMQParams(pindex, llmqType), pindex);
         }
     }
 
@@ -120,7 +120,7 @@ UniValue CDKGDebugStatus::ToJson(int detailLevel) const
         if (!Params().GetConsensus().legacy_llmqs.count(p.first)) {
             continue;
         }
-        sessionsJson.pushKV(std::string(GetLLMQParams(p.first).name), p.second.ToJson(detailLevel));
+        sessionsJson.pushKV(std::string(GetLegacyLLMQParams(p.first).name), p.second.ToJson(detailLevel));
     }
 
     ret.pushKV("session", sessionsJson);

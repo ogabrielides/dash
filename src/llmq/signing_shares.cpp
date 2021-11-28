@@ -105,13 +105,13 @@ std::string CBatchedSigShares::ToInvString() const
 template<typename T>
 static void InitSession(CSigSharesNodeState::Session& s, const uint256& signHash, T& from)
 {
-    const auto& llmq_params = GetLLMQParams((Consensus::LLMQType)from.llmqType);
-
     s.llmqType = (Consensus::LLMQType)from.llmqType;
     s.quorumHash = from.quorumHash;
     s.id = from.id;
     s.msgHash = from.msgHash;
     s.signHash = signHash;
+    assert(s.quorum);
+    const auto& llmq_params = s.quorum->params;
     s.announced.Init((size_t)llmq_params.size);
     s.requested.Init((size_t)llmq_params.size);
     s.knows.Init((size_t)llmq_params.size);
@@ -345,9 +345,9 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(const CNode* pfrom, const CSigSe
     return true;
 }
 
-bool CSigSharesManager::VerifySigSharesInv(Consensus::LLMQType llmqType, const CSigSharesInv& inv)
+bool CSigSharesManager::VerifySigSharesInv(const Consensus::LLMQParams& llmqParams, const CSigSharesInv& inv)
 {
-    return inv.inv.size() == GetLLMQParams(llmqType).size;
+    return inv.inv.size() == llmqParams.size;
 }
 
 bool CSigSharesManager::ProcessMessageSigSharesInv(const CNode* pfrom, const CSigSharesInv& inv)
@@ -357,7 +357,8 @@ bool CSigSharesManager::ProcessMessageSigSharesInv(const CNode* pfrom, const CSi
         return true;
     }
 
-    if (!VerifySigSharesInv(sessionInfo.llmqType, inv)) {
+    assert(sessionInfo.quorum);
+    if (!VerifySigSharesInv(sessionInfo.quorum->params, inv)) {
         return false;
     }
 
@@ -394,7 +395,8 @@ bool CSigSharesManager::ProcessMessageGetSigShares(const CNode* pfrom, const CSi
         return true;
     }
 
-    if (!VerifySigSharesInv(sessionInfo.llmqType, inv)) {
+    assert(sessionInfo.quorum);
+    if (!VerifySigSharesInv(sessionInfo.quorum->params, inv)) {
         return false;
     }
 
@@ -477,7 +479,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
     if (!quorum) {
         return;
     }
-    if (!CLLMQUtils::IsQuorumActive(sigShare.llmqType, quorum->qc->quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(quorum->params, quorum->qc->quorumHash)) {
         // quorum is too old
         return;
     }
@@ -526,7 +528,8 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
 {
     retBan = false;
 
-    if (!CLLMQUtils::IsQuorumActive(session.llmqType, session.quorum->qc->quorumHash)) {
+    assert(session.quorum);
+    if (!CLLMQUtils::IsQuorumActive(session.quorum->params, session.quorum->qc->quorumHash)) {
         // quorum is too old
         return false;
     }
@@ -919,7 +922,8 @@ void CSigSharesManager::CollectSigSharesToRequest(std::unordered_map<NodeId, std
                 }
                 auto& inv = (*invMap)[signHash];
                 if (inv.inv.empty()) {
-                    inv.Init(GetLLMQParams(session.llmqType).size);
+                    assert(session.quorum);
+                    inv.Init(session.quorum->params.size);
                 }
                 inv.inv[k.second] = true;
 
@@ -1066,7 +1070,8 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 
             auto& inv = sigSharesToAnnounce[nodeId][signHash];
             if (inv.inv.empty()) {
-                inv.Init(GetLLMQParams(sigShare->llmqType).size);
+                assert(session.quorum);
+                inv.Init(session.quorum->params.size);
             }
             inv.inv[quorumMember] = true;
             session.knows.inv[quorumMember] = true;
@@ -1284,7 +1289,8 @@ void CSigSharesManager::Cleanup()
 
     // Find quorums which became inactive
     for (auto it = quorums.begin(); it != quorums.end(); ) {
-        if (CLLMQUtils::IsQuorumActive(it->first.first, it->first.second)) {
+        assert(it->second);
+        if (CLLMQUtils::IsQuorumActive(it->second->params, it->first.second)) {
             it->second = quorumManager->GetQuorum(it->first.first, it->first.second);
             ++it;
         } else {

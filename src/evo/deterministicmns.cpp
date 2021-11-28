@@ -874,7 +874,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 return _state.DoS(100, false, REJECT_INVALID, "bad-qc-payload");
             }
             if (!qc.commitment.IsNull()) {
-                const auto& llmq_params = llmq::GetLLMQParams(qc.commitment.llmqType);
+                const auto& llmq_params = llmq::GetLLMQParams(pindexPrev, qc.commitment.llmqType);
                 uint32_t quorumHeight = qc.nHeight - (qc.nHeight % llmq_params.dkgInterval);
                 auto pQuorumBaseBlockIndex = pindexPrev->GetAncestor(quorumHeight);
                 if (!pQuorumBaseBlockIndex || pQuorumBaseBlockIndex->GetBlockHash() != qc.commitment.quorumHash) {
@@ -922,7 +922,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
 {
     // The commitment has already been validated at this point, so it's safe to use members of it
 
-    auto members = llmq::CLLMQUtils::GetAllQuorumMembers(llmq::GetLLMQParams(qc.llmqType), pQuorumBaseBlockIndex);
+    auto members = llmq::CLLMQUtils::GetAllQuorumMembers(llmq::GetLLMQParams(pQuorumBaseBlockIndex, qc.llmqType), pQuorumBaseBlockIndex);
 
     for (size_t i = 0; i < members.size(); i++) {
         if (!mnList.HasMN(members[i]->proTxHash)) {
