@@ -2,7 +2,8 @@
 
 FROM ubuntu:focal
 
-INCLUDE+ ci/Dockerfile
+INCLUDE+ ci/common/Dockerfile
+INCLUDE+ ci/common/Dockerfile.finish
 
 # The inherited Dockerfile switches to non-privileged context and we've
 # just started configuring this image, give us root access

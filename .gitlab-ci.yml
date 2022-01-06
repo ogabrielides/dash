@@ -23,13 +23,14 @@ builder-image:
     DOCKER_HOST: "tcp://docker:2375"
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
+    DOCKER_BUILDKIT: 1
   before_script:
     - echo $CI_JOB_TOKEN | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
   script:
-    - cd contrib/containers/ci
+    - cd contrib/containers/ci/32bit
     - docker pull $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG || true
     - docker pull $CI_REGISTRY_IMAGE:builder-develop || true
-    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile .
+    - docker build --cache-from $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG --cache-from $CI_REGISTRY_IMAGE:builder-develop -t $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG -f Dockerfile ..
     - docker push $CI_REGISTRY_IMAGE:builder-$CI_COMMIT_REF_SLUG
 
 .build-depends-template:

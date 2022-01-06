@@ -6,7 +6,6 @@ ENV DEBIAN_FRONTEND="noninteractive" TZ="Europe/London"
 # Build and base stuff
 # (zlib1g-dev and libssl-dev are needed for the Qt host binary builds, but should not be used by target binaries)
 ENV APT_ARGS="-y --no-install-recommends --no-upgrade"
-RUN dpkg --add-architecture i386
 RUN apt-get update && apt-get install $APT_ARGS \
     autotools-dev \
     automake \
@@ -56,7 +55,6 @@ RUN useradd -u ${USER_ID} -g dash -s /bin/bash -m -d /dash dash
 RUN apt-get update && apt-get install $APT_ARGS \
     bc \
     gawk \
-    g++-9-multilib \
     g++-arm-linux-gnueabihf \
     g++-mingw-w64-x86-64 \
     imagemagick \
@@ -71,7 +69,6 @@ RUN apt-get update && apt-get install $APT_ARGS \
     python3-zmq \
     parallel \
     wine-stable \
-    wine32 \
     wine64 \
     xorriso \
     && rm -rf /var/lib/apt/lists/*
@@ -98,14 +95,3 @@ RUN \
   update-alternatives --set x86_64-w64-mingw32-g++  /usr/bin/x86_64-w64-mingw32-g++-posix; \
   exit 0
 
-RUN mkdir /dash-src && \
-  mkdir -p /cache/ccache && \
-  mkdir /cache/depends && \
-  mkdir /cache/sdk-sources && \
-  chown $USER_ID:$GROUP_ID /dash-src && \
-  chown $USER_ID:$GROUP_ID /cache && \
-  chown $USER_ID:$GROUP_ID /cache -R
-
-WORKDIR /dash-src
-
-USER dash
