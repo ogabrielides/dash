@@ -449,6 +449,50 @@ private:
         }
         return true;
     }
+    [[nodiscard]] bool DeleteUniquePropertyOrTransform(const CDeterministicMN& dmn, const CBLSLazyPublicKey& oldValue)
+    {
+        bool switch_scheme = false;
+        static const CBLSLazyPublicKey nullValue;
+        if (oldValue == nullValue) {
+            return false;
+        }
+
+        CBLSPublicKey local_pub_key = oldValue.Get();
+        CBLSPublicKeyVersionWrapper legacy_pub_key(local_pub_key, true);
+
+        auto oldHash = ::SerializeHash(oldValue);
+        auto _oldHash = oldHash;
+        auto p = mnUniquePropertyMap.find(oldHash);
+        if (p == nullptr) {
+            /* Switch */
+            switch_scheme = true;
+
+            /* Recompute */
+            oldHash = ::SerializeHash(legacy_pub_key);
+            /* Reattempt */
+            p = mnUniquePropertyMap.find(oldHash);
+            LogPrintf("%s(): attempting switch and revalidate, legacy: %s, basic: %s\n", __func__, oldHash.ToString(), _oldHash.ToString());
+            if (p == nullptr) {
+                LogPrintf("%s(): revalidate failed, still not found in mnUniquePropertyMap\n", __func__);
+                return false;
+            }
+        }
+        if (p->first != dmn.proTxHash) {
+            if (switch_scheme) { 
+                LogPrintf("%s(): revalidate failed, %s != %s\n", __func__, p->first.ToString(), dmn.proTxHash.ToString());
+            }
+            return false;
+        }
+        if (p->second == 1) {
+            mnUniquePropertyMap = mnUniquePropertyMap.erase(oldHash);
+        } else {
+            mnUniquePropertyMap = mnUniquePropertyMap.set(oldHash, std::make_pair(dmn.proTxHash, p->second - 1));
+        }
+        if (switch_scheme) { 
+            LogPrintf("%s(): revalidate successful\n", __func__);
+        }
+        return true;
+    }
     template <typename T>
     [[nodiscard]] bool UpdateUniqueProperty(const CDeterministicMN& dmn, const T& oldValue, const T& newValue)
     {
@@ -458,6 +502,22 @@ private:
         static const T nullValue;
 
         if (oldValue != nullValue && !DeleteUniqueProperty(dmn, oldValue)) {
+            return false;
+        }
+
+        if (newValue != nullValue && !AddUniqueProperty(dmn, newValue)) {
+            return false;
+        }
+        return true;
+    }
+    [[nodiscard]] bool UpdateUniquePropertyOrTransform(const CDeterministicMN& dmn, const CBLSLazyPublicKey& oldValue, const CBLSLazyPublicKey& newValue)
+    {
+        if (oldValue == newValue) {
+            return true;
+        }
+        static const CBLSLazyPublicKey nullValue;
+
+        if (oldValue != nullValue && !DeleteUniquePropertyOrTransform(dmn, oldValue)) {
             return false;
         }
 
