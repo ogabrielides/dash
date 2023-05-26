@@ -28,7 +28,7 @@ struct CActiveMasternodeInfo {
     uint256 proTxHash;
     COutPoint outpoint;
     CService service;
-    bool legacy{true}; // TODO: or nVersion?
+    bool legacy{true};
 };
 
 
