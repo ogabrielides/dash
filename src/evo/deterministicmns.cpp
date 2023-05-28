@@ -778,7 +778,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             if (newList.HasUniqueProperty(proTx.addr)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-addr");
             }
-            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator)) {
+            if (newList.HasUniqueProperty(proTx.keyIDOwner) || newList.HasUniqueProperty(proTx.pubKeyOperator, proTx.nVersion == CProRegTx::LEGACY_BLS_VERSION)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-dup-key");
             }
 
@@ -1535,7 +1535,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
         }
 
         // never allow duplicate keys, even if this ProTx would replace an existing MN
-        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
+        if (mnList.HasUniqueProperty(ptx.keyIDOwner) || mnList.HasUniqueProperty(ptx.pubKeyOperator, ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION)) {
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
         }
 
@@ -1693,8 +1693,8 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
             return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-collateral-reuse");
         }
 
-        if (mnList.HasUniqueProperty(ptx.pubKeyOperator)) {
-            auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator);
+        if (mnList.HasUniqueProperty(ptx.pubKeyOperator, ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION)) {
+            auto otherDmn = mnList.GetUniquePropertyMN(ptx.pubKeyOperator, ptx.nVersion == CProRegTx::LEGACY_BLS_VERSION);
             if (ptx.proTxHash != otherDmn->proTxHash) {
                 return state.Invalid(TxValidationResult::TX_BAD_SPECIAL, "bad-protx-dup-key");
             }

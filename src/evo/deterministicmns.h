@@ -396,14 +396,44 @@ public:
     void RemoveMN(const uint256& proTxHash);
 
     template <typename T>
-    [[nodiscard]] bool HasUniqueProperty(const T& v) const
+    [[nodiscard]] bool HasUniqueProperty(const T& v, std::optional<bool> specific_legacy_bls_scheme = std::nullopt) const
     {
-        return mnUniquePropertyMap.count(::SerializeHash(v)) != 0;
+        uint256 hash;
+        if constexpr (std::is_same<T, CBLSLazyPublicKey>()) {
+            assert(specific_legacy_bls_scheme.has_value());
+            CBLSPublicKey local_pub_key = v.Get();
+            CBLSPublicKeyVersionWrapper wrapped_pub_key(local_pub_key, specific_legacy_bls_scheme.value());
+            hash = ::SerializeHash(wrapped_pub_key);
+        } else if constexpr (std::is_same<T, CBLSPublicKey>()) {
+            assert(specific_legacy_bls_scheme.has_value());
+            CBLSPublicKey local_pub_key = v;
+            CBLSPublicKeyVersionWrapper wrapped_pub_key(local_pub_key, specific_legacy_bls_scheme.value());
+            hash = ::SerializeHash(wrapped_pub_key);
+        } else {
+            assert(!specific_legacy_bls_scheme.has_value());
+            hash = ::SerializeHash(v);
+        }
+        return mnUniquePropertyMap.count(hash) != 0;
     }
     template <typename T>
-    [[nodiscard]] CDeterministicMNCPtr GetUniquePropertyMN(const T& v) const
+    [[nodiscard]] CDeterministicMNCPtr GetUniquePropertyMN(const T& v, std::optional<bool> specific_legacy_bls_scheme = std::nullopt) const
     {
-        auto p = mnUniquePropertyMap.find(::SerializeHash(v));
+        uint256 hash;
+        if constexpr (std::is_same<T, CBLSLazyPublicKey>()) {
+            assert(specific_legacy_bls_scheme.has_value());
+            CBLSPublicKey local_pub_key = v.Get();
+            CBLSPublicKeyVersionWrapper wrapped_pub_key(local_pub_key, specific_legacy_bls_scheme.value());
+            hash = ::SerializeHash(wrapped_pub_key);
+        } else if constexpr (std::is_same<T, CBLSPublicKey>()) {
+            assert(specific_legacy_bls_scheme.has_value());
+            CBLSPublicKey local_pub_key = v;
+            CBLSPublicKeyVersionWrapper wrapped_pub_key(local_pub_key, specific_legacy_bls_scheme.value());
+            hash = ::SerializeHash(wrapped_pub_key);
+        } else {
+            assert(!specific_legacy_bls_scheme.has_value());
+            hash = ::SerializeHash(v);
+        }
+        auto p = mnUniquePropertyMap.find(hash);
         if (!p) {
             return nullptr;
         }
