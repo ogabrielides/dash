@@ -1,12 +1,7 @@
-Testnet Breaking Changes
+Hard fork Deployment Changes
 ------------------------
 
-V20 will include two separate hard-forks.
-- `v20` that activates Enhanced Hard Fork, LLMQ Randomness Beacon
-- `mn_rr` that activates Masternode Reward Location Reallocation
-
-Note that `mn_rr` will be activated using the Enhanced Hard Fork mechanism.
+V20 will include a new hard-fork `v20` that activates Enhanced Hard Fork, LLMQ Randomness Beacon
 
 The earliest activation date for `v20` is **TO BE DEFINED**.
-The earliest activation date for `mn_rr` is **TO BE DEFINED**.
 
